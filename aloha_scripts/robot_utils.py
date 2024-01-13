@@ -76,6 +76,21 @@ class ImageRecorder:
             print(f'{cam_name} {image_freq=:.2f}')
         print()
 
+class BaseRecorder:
+    def __init__(self, init_node=True, is_debug=False):
+        from collections import deque
+        import rospy
+        from sensor_msgs.msg import Image
+        self.is_debug = is_debug
+        if init_node:
+            rospy.init_node('image_recorder', anonymous=True)
+        for cam_name in self.camera_names:
+            setattr(self, f'{cam_name}_image', None)
+
+            rospy.Subscriber(f"/usb_{cam_name}/image_raw", Image, callback_func)
+            if self.is_debug:
+                setattr(self, f'{cam_name}_timestamps', deque(maxlen=50))
+        time.sleep(0.5)
 class Recorder:
     def __init__(self, side, init_node=True, is_debug=False):
         from collections import deque
