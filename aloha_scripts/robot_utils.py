@@ -21,28 +21,29 @@ class ImageRecorder:
             setattr(self, f'{cam_name}_image', None)
             setattr(self, f'{cam_name}_secs', None)
             setattr(self, f'{cam_name}_nsecs', None)
-            if cam_name == 'cam_high':
-                callback_func = self.image_cb_cam_high
-            elif cam_name == 'cam_low':
-                callback_func = self.image_cb_cam_low
-            elif cam_name == 'cam_left_wrist':
-                callback_func = self.image_cb_cam_left_wrist
-            elif cam_name == 'cam_right_wrist':
-                callback_func = self.image_cb_cam_right_wrist
-            else:
-                raise NotImplementedError
-            rospy.Subscriber(f"/usb_{cam_name}/image_raw", Image, callback_func)
+            # if cam_name == 'cam_high':
+            #     callback_func = self.image_cb_cam_high
+            # elif cam_name == 'cam_low':
+            #     callback_func = self.image_cb_cam_low
+            # elif cam_name == 'cam_left_wrist':
+            #     callback_func = self.image_cb_cam_left_wrist
+            # elif cam_name == 'cam_right_wrist':
+            #     callback_func = self.image_cb_cam_right_wrist
+            # else:
+            #     raise NotImplementedError
+            callback_func = self.image_cb
+            rospy.Subscriber(f"/usb_cam/image_raw", Image, callback_func)
             if self.is_debug:
                 setattr(self, f'{cam_name}_timestamps', deque(maxlen=50))
         time.sleep(0.5)
 
-    def image_cb(self, cam_name, data):
-        setattr(self, f'{cam_name}_image', self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough'))
-        setattr(self, f'{cam_name}_secs', data.header.stamp.secs)
-        setattr(self, f'{cam_name}_nsecs', data.header.stamp.nsecs)
+    def image_cb(self, data):
+        setattr(self, f'usb_image', self.bridge.imgmsg_to_cv2(data, desired_encoding='passthrough'))
+        setattr(self, f'usb_secs', data.header.stamp.secs)
+        setattr(self, f'usb_nsecs', data.header.stamp.nsecs)
         # cv2.imwrite('/home/tonyzhao/Desktop/sample.jpg', cv_image)
         if self.is_debug:
-            getattr(self, f'{cam_name}_timestamps').append(data.header.stamp.secs + data.header.stamp.secs * 1e-9)
+            getattr(self, f'usb_timestamps').append(data.header.stamp.secs + data.header.stamp.secs * 1e-9)
 
     def image_cb_cam_high(self, data):
         cam_name = 'cam_high'
@@ -66,6 +67,12 @@ class ImageRecorder:
             image_dict[cam_name] = getattr(self, f'{cam_name}_image')
         return image_dict
 
+    def get_image(self):
+        image_dict = dict()
+        for cam_name in self.camera_names:
+            image_dict[cam_name] = getattr(self, f'usb_image')
+        return image_dict
+
     def print_diagnostics(self):
         def dt_helper(l):
             l = np.array(l)
@@ -76,21 +83,7 @@ class ImageRecorder:
             print(f'{cam_name} {image_freq=:.2f}')
         print()
 
-class BaseRecorder:
-    def __init__(self, init_node=True, is_debug=False):
-        from collections import deque
-        import rospy
-        from sensor_msgs.msg import Image
-        self.is_debug = is_debug
-        if init_node:
-            rospy.init_node('image_recorder', anonymous=True)
-        for cam_name in self.camera_names:
-            setattr(self, f'{cam_name}_image', None)
 
-            rospy.Subscriber(f"/usb_{cam_name}/image_raw", Image, callback_func)
-            if self.is_debug:
-                setattr(self, f'{cam_name}_timestamps', deque(maxlen=50))
-        time.sleep(0.5)
 class Recorder:
     def __init__(self, side, init_node=True, is_debug=False):
         from collections import deque

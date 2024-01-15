@@ -9,6 +9,11 @@ TASK_CONFIGS = {
         'episode_len': 1000,
         'camera_names': ['cam_high', 'cam_left_wrist', 'cam_right_wrist']
     },
+    'mobile': {
+        'dataset_dir': DATA_DIR + '/mobile',
+        'episode_len': 500,
+        'camera_names': ['cam_left_wrist']
+    },
 
     # wash_pan
     'aloha_mobile_wash_pan':{
