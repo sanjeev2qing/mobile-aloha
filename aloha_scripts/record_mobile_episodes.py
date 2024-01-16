@@ -125,8 +125,11 @@ def capture_one_episode(dt, max_timesteps, camera_names, dataset_dir, dataset_na
         '/observations/qpos': [],
         '/observations/qvel': [],
         '/observations/effort': [],
+        '/observations/scan': [],
+        '/observations/imu': [],
         '/action': [],
         '/base_action': [],
+
         # '/base_action_t265': [],
     }
     for cam_name in camera_names:
@@ -139,8 +142,11 @@ def capture_one_episode(dt, max_timesteps, camera_names, dataset_dir, dataset_na
         data_dict['/observations/qpos'].append(ts.observation['qpos'])
         data_dict['/observations/qvel'].append(ts.observation['qvel'])
         data_dict['/observations/effort'].append(ts.observation['effort'])
+        data_dict['/observations/scan'].append(ts.observation['scan'])
+        data_dict['/observations/imu'].append(ts.observation['imu'])
         data_dict['/action'].append(action)
         data_dict['/base_action'].append(ts.observation['base_vel'])
+
         # data_dict['/base_action_t265'].append(ts.observation['base_vel_t265'])
         for cam_name in camera_names:
             data_dict[f'/observations/images/{cam_name}'].append(ts.observation['images'][cam_name])
@@ -206,6 +212,14 @@ def capture_one_episode(dt, max_timesteps, camera_names, dataset_dir, dataset_na
         _ = obs.create_dataset('effort', (max_timesteps, 7))
         _ = root.create_dataset('action', (max_timesteps, 7))
         _ = root.create_dataset('base_action', (max_timesteps, 2))
+        _ = obs.create_dataset('scan', (max_timesteps, 135))
+
+        # IMU
+        imu = obs.create_group('imu')
+        _ = imu.create_dataset('orientation', (max_timesteps,4))
+        _ = imu.create_dataset('angular_velocity', (max_timesteps,3))
+        _ = imu.create_dataset('linear_acceleration', (max_timesteps,3))
+
         # _ = root.create_dataset('base_action_t265', (max_timesteps, 2))
 
         for name, array in data_dict.items():

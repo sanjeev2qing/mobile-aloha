@@ -10,6 +10,8 @@ from constants import PUPPET_GRIPPER_POSITION_NORMALIZE_FN, PUPPET_GRIPPER_VELOC
 from constants import PUPPET_GRIPPER_JOINT_OPEN, PUPPET_GRIPPER_JOINT_CLOSE
 from aloha_scripts.robot_utils import Recorder, ImageRecorder
 from base_recorder import BaseRecorder
+from scan_recorder import SCANRecorder
+from imu_recorder import IMURecorder
 from aloha_scripts.robot_utils import setup_master_bot, setup_puppet_bot, move_arms, move_grippers
 from interbotix_xs_modules.arm import InterbotixManipulatorXS
 from interbotix_xs_msgs.msg import JointSingleCommand
@@ -56,6 +58,8 @@ class RealEnv:
 
         self.recorder_left = Recorder('left', init_node=False)
         self.base_recorder = BaseRecorder(init_node=False)
+        self.scan_recorder = SCANRecorder(init_node=False)  # 雷达scan
+        self.imu_recorder = IMURecorder(init_node=False)  # imu
         self.image_recorder = ImageRecorder(init_node=False)
         self.gripper_command = JointSingleCommand(name="gripper")
     
@@ -131,6 +135,14 @@ class RealEnv:
     def get_base_vel(self):
         return self.base_recorder.get_vel()
 
+    # 雷达scan
+    def get_scan_vel(self):
+        return self.scan_recorder.get_scan_vel()
+
+    # 雷达scan
+    def get_imu_vel(self):
+        return self.imu_recorder.get_imu_vel()
+
     def get_tracer_vel(self):
         linear_vel, angular_vel = self.tracer.GetLinearVelocity(), self.tracer.GetAngularVelocity()
         return np.array([linear_vel, angular_vel])
@@ -159,6 +171,8 @@ class RealEnv:
         obs['images'] = self.get_images()
         # obs['base_vel_t265'] = self.get_base_vel_t265()
         obs['base_vel'] = self.get_base_vel()
+        obs['scan'] = self.get_scan_vel()  # 雷达
+        obs['imu'] = self.get_imu_vel()  # imu
 
         if get_tracer_vel:
             obs['tracer_vel'] = self.get_tracer_vel()
